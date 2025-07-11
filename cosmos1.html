@@ -21,15 +21,16 @@
         /* Космический фон */
         .space-bg {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
             background: 
                 radial-gradient(circle at 20% 30%, #1a0a2e 0%, #000000 40%),
                 linear-gradient(135deg, #0f0523 0%, #2d0b50 100%);
             z-index: -1;
             overflow: hidden;
+            will-change: transform; /* Улучшаем производительность */
         }
         
         .star {
@@ -195,6 +196,13 @@
             .hero {
                 padding: 60px 20px;
             }
+            
+            .space-bg {
+                top: -5%;
+                left: -5%;
+                width: 110%;
+                height: 110%;
+            }
         }
     </style>
 </head>
@@ -248,7 +256,7 @@
     <script>
         // Создаем звезды
         const spaceBg = document.getElementById('spaceBg');
-        for(let i = 0; i < 300; i++) {
+        for(let i = 0; i < 400; i++) { // Увеличил количество звезд
             const star = document.createElement('div');
             star.classList.add('star');
             
@@ -270,11 +278,44 @@
             spaceBg.appendChild(star);
         }
         
-        // Параллакс эффект
+        // Улучшенный параллакс эффект
+        let lastX = 0;
+        let lastY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        
+        // Обработчик движения мыши
         document.addEventListener('mousemove', (e) => {
-            const x = e.clientX / window.innerWidth - 0.5;
-            const y = e.clientY / window.innerHeight - 0.5;
-            spaceBg.style.transform = `translate(${x * 30}px, ${y * 30}px)`;
+            targetX = (e.clientX / window.innerWidth - 0.5) * 30;
+            targetY = (e.clientY / window.innerHeight - 0.5) * 30;
+        });
+        
+        // Плавная анимация
+        function animateParallax() {
+            // Плавное следование к цели
+            lastX += (targetX - lastX) * 0.1;
+            lastY += (targetY - lastY) * 0.1;
+            
+            // Ограничение смещения
+            const maxOffset = 30;
+            const limitedX = Math.max(-maxOffset, Math.min(maxOffset, lastX));
+            const limitedY = Math.max(-maxOffset, Math.min(maxOffset, lastY));
+            
+            spaceBg.style.transform = `translate(${limitedX}px, ${limitedY}px)`;
+            
+            requestAnimationFrame(animateParallax);
+        }
+        
+        animateParallax();
+        
+        // Реакция на изменение размера окна
+        window.addEventListener('resize', () => {
+            // Сброс позиции при изменении размера
+            spaceBg.style.transform = 'translate(0px, 0px)';
+            lastX = 0;
+            lastY = 0;
+            targetX = 0;
+            targetY = 0;
         });
     </script>
 </body>
