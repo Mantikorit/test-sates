@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Галактические Путешествия</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        #spaceCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 0;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ff9e00, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: #ffd166;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: #fff;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 120px 20px;
+            margin: 50px 0;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #ffd166, #ff9e00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            color: #ffd166;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(90deg, #ff9e00, #ff6b00);
+            color: #0d0d1a;
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .destinations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 100px 0;
+        }
+        
+        .destination-card {
+            background: rgba(13, 13, 26, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 158, 0, 0.3);
+        }
+        
+        .destination-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #ff9e00;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 40px;
+            margin-top: 100px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ff9e00;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="spaceCanvas"></canvas>
+    
+    <div class="container">
+        <header>
+            <div class="logo">Галактические Путешествия</div>
+            <nav>
+                <ul>
+                    <li><a href="#">Туры</a></li>
+                    <li><a href="#">Направления</a></li>
+                    <li><a href="#">Корабли</a></li>
+                    <li><a href="#">Бронирование</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <section class="hero">
+            <h1>Путешествие к звездам</h1>
+            <p>Забронируйте уникальный тур по нашей галактике и посетите самые удивительные уголки космоса</p>
+            <a href="#" class="btn">Забронировать тур</a>
+        </section>
+        
+        <section class="destinations">
+            <div class="destination-card">
+                <h3>Лунные Базы</h3>
+                <p>Посетите современные лунные колонии и прогуляйтесь по поверхности спутника Земли</p>
+            </div>
+            <div class="destination-card">
+                <h3>Марсианские Каньоны</h3>
+                <p>Исследуйте величественные каньоны Марса и древние марсианские долины</p>
+            </div>
+            <div class="destination-card">
+                <h3>Кольца Сатурна</h3>
+                <p>Пролетите сквозь знаменитые кольца шестой планеты Солнечной системы</p>
+            </div>
+        </section>
+        
+        <footer>
+            <p>© 2023 Галактические Путешествия. Все права защищены.</p>
+        </footer>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Настройка размеров
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        
+        // Создание звезд
+        const stars = [];
+        const starCount = 500;
+        
+        for(let i = 0; i < starCount; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2,
+                speed: Math.random() * 0.05,
+                opacity: Math.random() * 0.8 + 0.2
+            });
+        }
+        
+        // Создание туманностей
+        const nebulae = [];
+        const nebulaCount = 4;
+        
+        for(let i = 0; i < nebulaCount; i++) {
+            nebulae.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: 100 + Math.random() * 200,
+                color: `rgba(${Math.floor(Math.random() * 100 + 50)}, 
+                         ${Math.floor(Math.random() * 50)}, 
+                         ${Math.floor(Math.random() * 150 + 100)}, 
+                         0.1)`
+            });
+        }
+        
+        // Анимация
+        function animate() {
+            // Заполнение фона
+            const gradient = ctx.createRadialGradient(
+                canvas.width/2, canvas.height/2, 0,
+                canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height)/2
+            );
+            gradient.addColorStop(0, '#0d0d1a');
+            gradient.addColorStop(1, '#1a1a2e');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисование туманностей
+            nebulae.forEach(nebula => {
+                ctx.beginPath();
+                ctx.arc(nebula.x, nebula.y, nebula.radius, 0, Math.PI * 2);
+                ctx.fillStyle = nebula.color;
+                ctx.fill();
+            });
+            
+            // Рисование и анимация звезд
+            ctx.fillStyle = '#ffffff';
+            stars.forEach(star => {
+                // Мерцание
+                star.opacity += (Math.random() - 0.5) * 0.05;
+                if (star.opacity < 0.2) star.opacity = 0.2;
+                if (star.opacity > 1) star.opacity = 1;
+                
+                ctx.globalAlpha = star.opacity;
+                
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Движение
+                star.y += star.speed;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+                
+                ctx.globalAlpha = 1;
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // Реакция на изменение размера окна
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Параллакс эффект
+        document.addEventListener('mousemove', (e) => {
+            stars.forEach(star => {
+                const parallax = star.size / 5;
+                star.x += (e.movementX * parallax) / 10;
+                star.y += (e.movementY * parallax) / 10;
+            });
+        });
+    </script>
+</body>
+</html>
