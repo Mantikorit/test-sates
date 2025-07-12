@@ -52,6 +52,7 @@
     <script>
 class StarBackground {
   constructor(config = {}) {
+    // Стандартная конфигурация
     this.defaultConfig = {
       starsCount: 400,
       nebulae: [],
@@ -88,33 +89,49 @@ class StarBackground {
         minOpacity: 0.1,
         maxOpacity: 0.5
       },
-      nebulaColors: [
-        '#8c2a5d', '#2a8c5d', '#2a5d8c', '#5d2a8c', 
-        '#8c5d2a', '#5d8c2a', '#5a8c8c', '#8c5a7a'
+      // Цветовые схемы для туманностей
+      nebulaColorSchemes: [
+        {
+          name: "Фиолетовая",
+          colors: ['#8c2a5d', '#5d2a8c', '#8c5a7a']
+        },
+        {
+          name: "Синяя",
+          colors: ['#2a5d8c', '#5a8c8c', '#2a8c5d']
+        },
+        {
+          name: "Теплая",
+          colors: ['#8c5d2a', '#5d8c2a', '#8c2a2a']
+        }
       ]
     };
 
+    // Цветовые схемы для фона
     this.defaultColorSchemes = [
       {
         name: "Фиолетовая",
         primaryGradient: '#1a0a2e',
         secondaryGradient: '#0f0523',
         tertiaryGradient: '#2d0b50',
-        bgColor: '#000000'
+        bgColor: '#000000',
+        // Связь с несколькими схемами туманностей
+        linkedNebulaSchemes: ["Фиолетовая", "Синяя"]
       },
       {
         name: "Голубая",
         primaryGradient: '#0a1a2e',
         secondaryGradient: '#051223',
         tertiaryGradient: '#0b2d50',
-        bgColor: '#000011'
+        bgColor: '#000011',
+        linkedNebulaSchemes: ["Синяя"]
       },
       {
         name: "Красная",
         primaryGradient: '#2e0a0a',
         secondaryGradient: '#230505',
         tertiaryGradient: '#500b0b',
-        bgColor: '#110000'
+        bgColor: '#110000',
+        linkedNebulaSchemes: ["Теплая", "Фиолетовая"]
       },
       {
         name: "Зеленая",
@@ -132,6 +149,7 @@ class StarBackground {
       }
     ];
 
+    // Глубокое слияние конфигураций
     this.config = { 
       ...this.defaultConfig,
       ...config,
@@ -141,27 +159,63 @@ class StarBackground {
       }
     };
 
-    if (config.colorSchemes && config.colorSchemes.length > 0) {
-      this.colorSchemes = config.colorSchemes;
-    } else {
-      this.colorSchemes = this.defaultColorSchemes;
-    }
+    // Пользовательские цветовые схемы
+    this.colorSchemes = config.colorSchemes || this.defaultColorSchemes;
+    
+    // Пользовательские схемы для туманностей
+    this.nebulaColorSchemes = config.nebulaColorSchemes || this.defaultConfig.nebulaColorSchemes;
+    
+    // Цвета туманностей по умолчанию
+    this.nebulaColors = [
+      '#8c2a5d', '#2a8c5d', '#2a5d8c', '#5d2a8c', 
+      '#8c5d2a', '#5d8c2a', '#5a8c8c', '#8c5a7a'
+    ];
 
-    if (config.nebulaColors && config.nebulaColors.length > 0) {
-      this.nebulaColors = config.nebulaColors;
-    } else {
-      this.nebulaColors = this.defaultConfig.nebulaColors;
-    }
-
+    // Если цвета не заданы - выбираем случайную схему
     if (!config.colors) {
       this.config.colors = this.getRandomColorScheme();
     }
+    
+    // Всегда применяем связанные схемы туманностей
+    this.applyLinkedNebulaSchemes();
 
+    // Если туманности не заданы - генерируем случайные
     if (!config.nebulae) {
       this.generateRandomNebulae();
     }
 
     this.init();
+  }
+
+  /**
+   * Применяет связанные цветовые схемы для туманностей
+   * на основе выбранной схемы фона
+   */
+  applyLinkedNebulaSchemes() {
+    // Проверяем, есть ли связи в текущей схеме фона
+    if (this.config.colors.linkedNebulaSchemes && 
+        Array.isArray(this.config.colors.linkedNebulaSchemes)) {
+      
+      // Собираем все цвета из всех связанных схем
+      const allColors = [];
+      
+      this.config.colors.linkedNebulaSchemes.forEach(schemeName => {
+        // Ищем схему туманностей по имени
+        const nebulaScheme = this.nebulaColorSchemes.find(
+          scheme => scheme.name === schemeName
+        );
+        
+        // Если нашли и есть цвета - добавляем их
+        if (nebulaScheme && nebulaScheme.colors && Array.isArray(nebulaScheme.colors)) {
+          allColors.push(...nebulaScheme.colors);
+        }
+      });
+      
+      // Если нашли цвета - применяем их
+      if (allColors.length > 0) {
+        this.nebulaColors = allColors;
+      }
+    }
   }
 
   getRandomGradientParams() {
@@ -197,12 +251,16 @@ class StarBackground {
   generateRandomNebulae() {
     const { minCount, maxCount, minSize, maxSize, minBlur, maxBlur, minOpacity, maxOpacity } = this.config.nebulaeSettings;
     
+    // Рассчитываем случайное количество туманностей
     const nebulaCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
     this.config.nebulae = [];
     
     for (let i = 0; i < nebulaCount; i++) {
+      // Выбираем случайный цвет из текущей палитры туманностей
+      const color = this.nebulaColors[Math.floor(Math.random() * this.nebulaColors.length)];
+      
       this.config.nebulae.push({
-        color: this.nebulaColors[Math.floor(Math.random() * this.nebulaColors.length)],
+        color,
         size: Math.floor(Math.random() * (maxSize - minSize + 1)) + minSize,
         blur: Math.floor(Math.random() * (maxBlur - minBlur + 1)) + minBlur,
         opacity: minOpacity + Math.random() * (maxOpacity - minOpacity),
@@ -377,7 +435,7 @@ class StarBackground {
 
 // Инициализация после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
-  // Создаем экземпляр с настройками
+  // Расширенные настройки с множественными связями
   const spaceBg = new StarBackground({
     starsCount: 800,
     parallax: {
@@ -398,8 +456,8 @@ document.addEventListener('DOMContentLoaded', () => {
       starsChangeDuration: 1200
     },
     nebulaeSettings: {
-      minCount: 2,
-      maxCount: 7,
+      minCount: 3,
+      maxCount: 8,
       minSize: 80,
       maxSize: 500,
       minBlur: 10,
@@ -407,24 +465,44 @@ document.addEventListener('DOMContentLoaded', () => {
       minOpacity: 0.05,
       maxOpacity: 0.6
     },
+    // Пользовательские цветовые схемы фона
     colorSchemes: [
       {
         name: "Галактическая",
         primaryGradient: '#0a0a2e',
         secondaryGradient: '#050523',
         tertiaryGradient: '#1b0b50',
-        bgColor: '#000011'
+        bgColor: '#000011',
+        // Связь с несколькими схемами туманностей
+        linkedNebulaSchemes: ["Космическая", "Синяя"]
       },
       {
         name: "Пурпурная",
         primaryGradient: '#2e0a1a',
         secondaryGradient: '#230515',
         tertiaryGradient: '#500b2d',
-        bgColor: '#0a000a'
+        bgColor: '#0a000a',
+        linkedNebulaSchemes: ["Марсианская", "Фиолетовая"]
       }
     ],
-    nebulaColors: [
-      '#ff6b6b', '#48dbfb', '#1dd1a1', '#f368e0', '#ff9f43'
+    // Пользовательские схемы для туманностей
+    nebulaColorSchemes: [
+      {
+        name: "Космическая",
+        colors: ['#6b8cff', '#48dbfb', '#1dd1a1']
+      },
+      {
+        name: "Синяя",
+        colors: ['#2a5d8c', '#5a8c8c', '#2a8c5d']
+      },
+      {
+        name: "Марсианская",
+        colors: ['#ff6b6b', '#ff9f43', '#f368e0']
+      },
+      {
+        name: "Фиолетовая",
+        colors: ['#8c2a5d', '#5d2a8c', '#8c5a7a']
+      }
     ]
   });
 
