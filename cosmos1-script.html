@@ -1,0 +1,547 @@
+<!DOCTYPE html> <!-- Объявление типа документа для парсера браузера -->
+<html lang="ru"> <!-- Корневой элемент с указанием языка -->
+<head> <!-- Секция метаданных и ресурсов -->
+    <meta charset="UTF-8"> <!-- Кодировка символов Unicode -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Адаптивный вьюпорт -->
+    <title>Dynamic Space Background</title> <!-- Заголовок вкладки браузера -->
+</head>
+<body> <!-- Видимая часть документа -->
+
+    <script> <!-- Начало исполняемого JavaScript-кода -->
+/**
+ * STARBACKGROUND CLASS - ядро системы визуализации космоса
+ * Реализует: 
+ *   - Параллакс-эффект на основе движения мыши
+ *   - Генерацию процедурных небесных тел
+ *   - Физику плавных переходов
+ *   - Адаптивную подстройку под размеры экрана
+ */
+class StarBackground {
+  /**
+   * CONSTRUCTOR - точка инициализации экземпляра
+   * @param {Object} config - Пользовательская конфигурация (деструктурируется)
+   */
+  constructor(config = {}) { // Значение по умолчанию - пустой объект
+    // Детализированная конфигурация по умолчанию
+    this.defaultConfig = {
+      starsCount: 400, // Базовое количество звезд
+      nebulae: [ // Массив объектов туманностей
+        { 
+          color: '#1d1a1c', // Пурпурный оттенок
+          size: 300, // Диаметр в пикселях
+          blur: 50, // Сила размытия по Гауссу
+          opacity: 0.3, // Полупрозрачность
+          position: { // Абсолютное позиционирование
+            top: '15%', // Отступ сверху
+            left: '10%' // Отступ слева
+          } 
+        },
+        // Аналогично второй туманности
+      ],
+      parallax: { // Параметры параллакс-движения
+        intensity: 30, // Коэффициент реакции на движение мыши
+        smoothness: 0.1, // Коэффициент интерполяции (0.1 = 10% сглаживания)
+        maxOffset: 50 // Лимит смещения в пикселях
+      },
+      colors: { // Цветовая палитра фона
+        primaryGradient: '#1a0a2e', // Темно-фиолетовый
+        secondaryGradient: '#0f0523', // Почти черный
+        tertiaryGradient: '#2d0b50', // Фиолетовый
+        bgColor: '#000000' // Фон fallback
+      },
+      stars: { // Параметры генерации звезд
+        minSize: 0.5, // Минимальный размер (px)
+        maxSize: 2.5, // Максимальный размер (px)
+        minOpacity: 0.2, // Минимальная видимость
+        maxOpacity: 0.7, // Максимальная видимость
+        minDuration: 3, // Минимальный цикл мерцания (сек)
+        maxDuration: 10 // Максимальный цикл мерцания
+      },
+      animations: { // Тайминги анимаций
+        fadeInDuration: 2000, // Время появления элементов (мс)
+        starsChangeDuration: 1000 // Время перестроения звезд
+      }
+    };
+
+    // Глубокое слияние конфигураций через spread-оператор
+    this.config = { 
+      ...this.defaultConfig, // Базовые значения
+      ...config // Пользовательские переопределения
+    };
+
+    // Инициализация компонента
+    this.init(); // Вызов главного метода инициализации
+  }
+
+  /** 
+   * INIT - главный инициализатор системы
+   * Последовательность создания:
+   *   1. Контейнер
+   *   2. Глобальные стили
+   *   3. Визуальные элементы
+   *   4. Интерактивные системы
+   */
+  init() {
+    this.createContainer(); // Создание DOM-контейнера
+    this.applyGlobalStyles(); // Инъекция CSS-правил
+    this.createNebulae(true); // Генерация туманностей с анимацией
+    this.createStars(true);   // Генерация звезд с анимацией
+    this.initParallax();     // Запуск системы параллакса
+    this.addResizeListener(); // Регистрация обработчика ресайза
+  }
+
+  /** 
+   * CREATE CONTAINER - создает корневой DOM-элемент
+   * Технические детали:
+   *   - prepend() вместо append() для приоритетной отрисовки фона
+   *   - Фиксированная позиция
+   *   - Отрицательные отступы для компенсации параллакса
+   */
+  createContainer() {
+    this.spaceBg = document.createElement('div'); // Создание элемента
+    this.spaceBg.id = 'spaceBg'; // Идентификатор для стилизации
+    this.applyContainerStyles(); // Применение CSS-свойств
+    document.body.prepend(this.spaceBg); // Вставка в начало body
+  }
+
+  /** 
+   * APPLY CONTAINER STYLES - задает базовые стили контейнера
+   * Особенности:
+   *   - Многослойный градиент через radial-gradient и linear-gradient
+   *   - will-change: transform для оптимизации анимации
+   *   - Плавное появление через transition opacity
+   */
+  applyContainerStyles() {
+    // Комплексное присвоение стилей через Object.assign
+    Object.assign(this.spaceBg.style, {
+      position: 'fixed', // Фиксированное позиционирование
+      top: '-10%', // Расширение за границы видимости
+      left: '-10%',
+      width: '120%', // Компенсация смещения
+      height: '120%',
+      // Многоуровневый градиент:
+      background: `
+        radial-gradient(circle at 20% 30%, ${this.config.colors.primaryGradient} 0%, ${this.config.colors.bgColor} 40%),
+        linear-gradient(135deg, ${this.config.colors.secondaryGradient} 0%, ${this.config.colors.tertiaryGradient} 100%)
+      `,
+      zIndex: '-1', // Под основным контентом
+      overflow: 'hidden', // Скрытие выходящих за границы элементов
+      willChange: 'transform', // Хинт для браузера
+      opacity: '0', // Начальная невидимость
+      // CSS-переход для плавного появления:
+      transition: `opacity ${this.config.animations.fadeInDuration}ms ease-out`
+    });
+
+    // Отложенное проявление через setTimeout
+    setTimeout(() => {
+      this.spaceBg.style.opacity = '1'; // Финальная видимость
+    }, 100); // Задержка для синхронизации
+  }
+
+  /** 
+   * APPLY GLOBAL STYLES - внедряет глобальные CSS-правила
+   * Содержит:
+   *   - Сброс стандартных стилей
+   *   - Ключевые кадры анимаций
+   *   - Медиа-запросы для адаптивности
+   */
+  applyGlobalStyles() {
+    const style = document.createElement('style'); // Создание тега style
+    // CSS-контент как текстовая нода:
+    style.textContent = `
+      /* Reset CSS */
+      * { 
+        margin: 0; 
+        padding: 0; 
+        box-sizing: border-box; /* Корректный расчет размеров */
+      }
+      
+      /* Базовые стили body */
+      body { 
+        color: #fff; 
+        overflow-x: hidden; /* Блокировка горизонтального скролла */
+        min-height: 100vh; /* Минимальная высота = экрану */
+        position: relative; /* Контекст позиционирования */
+        background: #000000; /* Фон на случай ошибок */
+      }
+      
+      /* Анимация мерцания звезд */
+      @keyframes twinkle {
+        0%, 100% { opacity: 0.3; } /* Фазы минимальной видимости */
+        50% { opacity: 1; } /* Пик яркости */
+      }
+      
+      /* Анимация полета кометы */
+      @keyframes cometFly {
+        0% { 
+          transform: rotate(-45deg) translateX(-100vw); /* Начало за экраном */
+          opacity: 0; 
+        }
+        20% { opacity: 1; } /* Появление */
+        80% { opacity: 1; } /* Период видимости */
+        100% { 
+          transform: rotate(-45deg) translateX(100vw); /* Уход за экран */
+          opacity: 0; 
+        }
+      }
+      
+      /* Адаптив для мобильных */
+      @media (max-width: 768px) {        
+        #spaceBg {
+          /* Уменьшение области фона */
+          top: -5% !important;
+          left: -5% !important;
+          width: 110% !important;
+          height: 110% !important;
+        }
+      }
+    `;
+    document.head.appendChild(style); // Инъекция в <head>
+  }
+
+  /**
+   * CREATE NEBULAE - генерирует туманности
+   * Алгоритм:
+   *   1. Итерация по конфигурации
+   *   2. Создание div-элемента для каждой туманности
+   *   3. Применение стилей с учетом параметров
+   *   4. Плавное появление через setTimeout
+   */
+  createNebulae(fadeIn = false) {
+    // Перебор массива туманностей из конфига
+    this.config.nebulae.forEach(nebula => {
+      const element = document.createElement('div'); // Создание DOM-ноды
+      
+      // Комплексное применение стилей:
+      Object.assign(element.style, {
+        position: 'absolute',
+        borderRadius: '50%', // Круглая форма
+        filter: `blur(${nebula.blur}px)`, // CSS-фильтр размытия
+        opacity: fadeIn ? '0' : nebula.opacity, // Условная прозрачность
+        width: `${nebula.size}px`, // Динамический размер
+        height: `${nebula.size}px`,
+        // Радиальный градиент:
+        background: `radial-gradient(circle, ${nebula.color}, transparent 70%)`,
+        ...nebula.position, // Деструктуризация позиции
+        // CSS-переход для плавности:
+        transition: `opacity ${this.config.animations.fadeInDuration}ms ease-out`
+      });
+
+      this.spaceBg.appendChild(element); // Прикрепление к контейнеру
+
+      // Отложенное проявление для fadeIn-эффекта
+      if (fadeIn) {
+        setTimeout(() => {
+          element.style.opacity = nebula.opacity; // Установка финальной прозрачности
+        }, 200); // Стартовая задержка
+      }
+    });
+  }
+
+  /**
+   * CREATE STARS - процедурная генерация звезд
+   * Особенности:
+   *   - Случайный размер в заданном диапазоне
+   *   - Случайная длительность анимации
+   *   - Случайное позиционирование
+   *   - Поэлементная задержка появления
+   */
+  createStars(fadeIn = false) {
+    // Деструктуризация параметров для удобства
+    const { minSize, maxSize, minOpacity, maxOpacity, minDuration, maxDuration } = this.config.stars;
+
+    // Цикл генерации по количеству
+    for (let i = 0; i < this.config.starsCount; i++) {
+      const star = document.createElement('div'); // Создание элемента
+      
+      // Рандомизация параметров:
+      const size = Math.random() * (maxSize - minSize) + minSize; // Линейная интерполяция
+      const duration = minDuration + Math.random() * (maxDuration - minDuration); // Длительность анимации
+      const opacity = minOpacity + Math.random() * (maxOpacity - minOpacity); // Случайная прозрачность
+
+      // Установка CSS-свойств:
+      Object.assign(star.style, {
+        position: 'absolute',
+        backgroundColor: 'white', // Цвет звезд
+        borderRadius: '50%', // Круглая форма
+        animation: `twinkle ${duration}s infinite ease-in-out`, // Подключение анимации
+        width: `${size}px`, // Динамический размер
+        height: `${size}px`,
+        left: `${Math.random() * 100}%`, // Случайная позиция X
+        top: `${Math.random() * 100}%`,  // Случайная позиция Y
+        opacity: fadeIn ? '0' : opacity, // Начальная прозрачность
+        transition: `opacity ${this.config.animations.fadeInDuration}ms ease-out` // Анимация появления
+      });
+
+      this.spaceBg.appendChild(star); // Добавление в DOM
+
+      // Плавное появление со случайной задержкой
+      if (fadeIn) {
+        // Уникальная задержка для каждой звезды
+        setTimeout(() => {
+          star.style.opacity = opacity; // Установка конечной прозрачности
+        }, Math.random() * this.config.animations.fadeInDuration); // Случайная задержка
+      }
+    }
+  }
+
+  /** 
+   * INIT PARALLAX - инициализация системы параллакса
+   * Физика работы:
+   *   1. Фиксация позиции мыши
+   *   2. Интерполяция значений
+   *   3. Ограничение смещения
+   *   4. Применение трансформации
+   */
+  initParallax() {
+    // Инициализация переменных позиционирования
+    this.lastX = 0; // Последнее зафиксированное положение X
+    this.lastY = 0; // Последнее зафиксированное положение Y
+    this.targetX = 0; // Целевое положение X
+    this.targetY = 0; // Целевое положение Y
+
+    // Слушатель движения мыши
+    document.addEventListener('mousemove', (e) => {
+      // Нормализация координат (0-1) с центром в 0.5
+      const normalizedX = e.clientX / window.innerWidth - 0.5;
+      const normalizedY = e.clientY / window.innerHeight - 0.5;
+      
+      // Расчет целевого смещения с учетом интенсивности
+      this.targetX = normalizedX * this.config.parallax.intensity;
+      this.targetY = normalizedY * this.config.parallax.intensity;
+    });
+
+    this.animateParallax(); // Запуск цикла анимации
+  }
+
+  /** 
+   * ANIMATE PARALLAX - рекурсивная функция анимации
+   * Принцип работы:
+   *   Линейная интерполяция (LERP) между текущим и целевым положением
+   *   Формула: current = current + (target - current) * factor
+   */
+  animateParallax() {
+    // Плавное изменение позиции с коэффициентом сглаживания
+    this.lastX += (this.targetX - this.lastX) * this.config.parallax.smoothness;
+    this.lastY += (this.targetY - this.lastY) * this.config.parallax.smoothness;
+
+    // Ограничение смещения (clamping)
+    const limitedX = Math.max(
+      -this.config.parallax.maxOffset, 
+      Math.min(this.config.parallax.maxOffset, this.lastX)
+    );
+    const limitedY = Math.max(
+      -this.config.parallax.maxOffset, 
+      Math.min(this.config.parallax.maxOffset, this.lastY)
+    );
+
+    // Применение трансформации через CSS
+    this.spaceBg.style.transform = `translate(${limitedX}px, ${limitedY}px)`;
+    
+    // Рекурсивный вызов через requestAnimationFrame
+    requestAnimationFrame(() => this.animateParallax());
+  }
+
+  /** 
+   * ADD RESIZE LISTENER - обработчик изменения размеров окна
+   * Решает проблемы:
+   *   - Сброс параллакса при ресайзе
+   *   - Предотвращение артефактов позиционирования
+   */
+  addResizeListener() {
+    window.addEventListener('resize', () => {
+      // Мгновенный сброс трансформации
+      this.spaceBg.style.transform = 'translate(0px, 0px)';
+      // Сброс внутренних состояний
+      this.lastX = 0;
+      this.lastY = 0;
+      this.targetX = 0;
+      this.targetY = 0;
+    });
+  }
+
+  /** 
+   * ADD COMET - создает анимированную комету
+   * Особенности:
+   *   - Линейный градиент для "хвоста"
+   *   - Случайная траектория
+   *   - Затухание по краям траектории
+   * @returns {HTMLElement} Созданный элемент
+   */
+  addComet() {
+    const comet = document.createElement('div'); // Создание элемента
+    
+    // Настройка стилей кометы:
+    Object.assign(comet.style, {
+      position: 'absolute',
+      width: '120px', // Длина хвоста
+      height: '4px', // Толщина хвоста
+      // Горизонтальный градиент с прозрачностью:
+      background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
+      transformOrigin: 'left center', // Точка трансформации
+      transform: 'rotate(-45deg)', // Угол наклона траектории
+      top: `${Math.random() * 100}%`, // Случайная стартовая позиция Y
+      left: `${Math.random() * 100}%`, // Случайная стартовая позиция X
+      // Анимация полета с случайной длительностью:
+      animation: `cometFly ${8 + Math.random() * 15}s infinite linear`,
+      opacity: '0', // Начальная невидимость
+      transition: 'opacity 1s ease-out' // Плавное появление
+    });
+
+    this.spaceBg.appendChild(comet); // Вставка в DOM
+
+    // Отложенное проявление кометы
+    setTimeout(() => {
+      comet.style.opacity = '1'; // Установка видимости
+    }, 50); // Минимальная задержка
+
+    return comet; // Возврат элемента для управления
+  }
+
+  /** 
+   * UPDATE STARS COUNT - динамическое изменение количества звезд
+   * Алгоритм:
+   *   1. Поиск текущих звезд
+   *   2. Плавное исчезновение
+   *   3. Удаление из DOM
+   *   4. Генерация новых звезд
+   * @param {number} newCount - Новое количество
+   */
+  updateStarsCount(newCount) {
+    // Получение всех текущих звезд
+    const stars = document.querySelectorAll('#spaceBg > div');
+    // Расчет времени затухания (половина общего времени)
+    const fadeOutDuration = this.config.animations.starsChangeDuration / 2;
+
+    // Применение анимации исчезновения
+    stars.forEach(star => {
+      star.style.transition = `opacity ${fadeOutDuration}ms ease-out`;
+      star.style.opacity = '0'; // Инициирование исчезновения
+    });
+
+    // Отложенное удаление и пересоздание
+    setTimeout(() => {
+      // Удаление всех старых звезд
+      stars.forEach(star => star.remove());
+      // Обновление конфигурации
+      this.config.starsCount = newCount;
+      // Генерация новых звезд с анимацией
+      this.createStars(true);
+    }, fadeOutDuration); // Задержка = времени анимации
+  }
+
+  /** 
+   * ADD NEBULA - динамическое добавление туманности
+   * @param {Object} config - Кастомные параметры
+   */
+  addNebula(config) {
+    // Создание конфига с дефолтными значениями
+    const nebulaConfig = { 
+      ...this.defaultConfig.nebulae[0], // Базовые значения
+      ...config, // Пользовательские параметры
+      opacity: 0 // Начальная прозрачность
+    };
+    
+    this.config.nebulae.push(nebulaConfig); // Обновление конфигурации
+    
+    const element = document.createElement('div'); // Создание элемента
+    
+    // Установка стилей с анимацией масштаба:
+    Object.assign(element.style, {
+      position: 'absolute',
+      borderRadius: '0%', // Будет переопределено
+      filter: `blur(${nebulaConfig.blur}px)`,
+      opacity: '0', // Стартовая прозрачность
+      width: `${nebulaConfig.size}px`,
+      height: `${nebulaConfig.size}px`,
+      background: `radial-gradient(circle, ${nebulaConfig.color}, transparent 70%)`,
+      ...nebulaConfig.position,
+      // Комбинированный transition:
+      transition: `
+        opacity ${this.config.animations.fadeInDuration}ms ease-out, 
+        transform ${this.config.animations.fadeInDuration}ms ease-out
+      `,
+      transform: 'scale(0.8)' // Начальный масштаб
+    });
+    
+    this.spaceBg.appendChild(element); // Вставка в DOM
+    
+    // Активация анимации через микро-задержку
+    setTimeout(() => {
+      element.style.opacity = nebulaConfig.opacity; // Проявление
+      element.style.transform = 'scale(1)'; // Увеличение до нормального размера
+    }, 50);
+  }
+
+  /** 
+   * DESTROY - корректное удаление фона
+   * Последовательность:
+   *   1. Плавное исчезновение
+   *   2. Удаление из DOM после анимации
+   */
+  destroy() {
+    // Установка CSS-перехода
+    this.spaceBg.style.transition = `opacity ${this.config.animations.fadeInDuration}ms ease-out`;
+    this.spaceBg.style.opacity = '0'; // Инициирование исчезновения
+    
+    // Отложенное удаление
+    setTimeout(() => {
+      this.spaceBg.remove(); // Удаление из DOM
+    }, this.config.animations.fadeInDuration); // После завершения анимации
+  }
+}
+
+// ИНИЦИАЛИЗАЦИЯ ПОСЛЕ ЗАГРУЗКИ DOM
+document.addEventListener('DOMContentLoaded', () => {
+  // Расширенная кастомная конфигурация
+  const spaceBg = new StarBackground({
+    starsCount: 800, // Увеличенное количество звезд
+    nebulae: [ // Кастомные туманности
+      { 
+        color: '#8c2a5d', // Пурпурно-розовый
+        size: 350, 
+        blur: 60, // Сильное размытие
+        opacity: 0.4, // Повышенная видимость
+        position: { top: '20%', right: '5%' } 
+      },
+      { 
+        color: '#2a8c5d', // Изумрудный
+        size: 250, 
+        blur: 40, 
+        opacity: 0.35, 
+        position: { bottom: '15%', left: '10%' } 
+      }
+    ],
+    parallax: { // Усиленный параллакс
+      intensity: 40, // Большая чувствительность
+      smoothness: 0.08, // Более плавное движение
+      maxOffset: 60 // Увеличенный лимит смещения
+    },
+    colors: { // Альтернативная цветовая схема
+      primaryGradient: '#2e0a1a', // Бордовый
+      secondaryGradient: '#23050f', // Глубокий черный
+      tertiaryGradient: '#500b2d', // Темно-пурпурный
+      bgColor: '#0a0a0a' // Темно-серый фон
+    },
+    stars: { // Параметры звезд
+      minSize: 0.3, // Более мелкие звезды
+      maxSize: 3, // Более крупные звезды
+      minOpacity: 0.1, // Больший диапазон видимости
+      maxOpacity: 0.9,
+      minDuration: 2, // Более быстрое мерцание
+      maxDuration: 15 // Более медленное мерцание
+    },
+    animations: { // Настройки анимации
+      fadeInDuration: 1500, // Ускоренное появление
+      starsChangeDuration: 1200 // Быстрая смена звезд
+    }
+  });
+
+  // Генерация комет с различными задержками
+  [0, 2000, 4000, 6000, 8000].forEach(delay => {
+    setTimeout(() => spaceBg.addComet(), delay);
+  });
+});
+    </script> <!-- Конец JavaScript-кода -->
+</body>
+</html>
