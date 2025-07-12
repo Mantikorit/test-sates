@@ -5,6 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Примеры сайтов</title>
 </head>
+<style>
+/* Базовые настройки */
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+}
+
+/* Стилизация контейнера */
+li {
+  list-style-type: none;
+  padding: 0;
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+/* Стилизация ссылок */
+a {
+  display: block;
+  padding: 15px 20px;
+  text-decoration: none;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  transition: all 0.3s ease;
+  font-size: 16px;
+}
+
+/* Убираем границу у последней ссылки */
+a:last-child {
+  border-bottom: none;
+}
+
+/* Эффекты при наведении */
+a:hover {
+  background-color: #f0f7ff;
+  color: #0066cc;
+  padding-left: 25px;
+}
+
+/* Эффекты при нажатии */
+a:active {
+  background-color: #e0eeff;
+}
+
+/* Иконка перед ссылкой */
+a::before {
+  content: "→";
+  margin-right: 10px;
+  color: #999;
+  transition: all 0.3s ease;
+}
+
+a:hover::before {
+  color: #0066cc;
+  margin-right: 15px;
+}
+
+/* Заголовок страницы */
+body::before {
+  content: "Примеры сайтов";
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+</style>
 <body>
     <li>
         <a href="svernut.html">Пример применения развернуть</a>
@@ -12,6 +84,7 @@
         <a href="cosmos2.html"> Canvas API (Продвинутая анимация)</a>
         <a href="cosmos3.html"> Библиотека particles.js (Простое решение)</a>
         <a href="avideo.html"> Коэфициэнт ускорения видео</a>
+        <a href="cosmos1-script.html"> анимированные звёзды в js</a>
     </li>
 </body>
 </html>
