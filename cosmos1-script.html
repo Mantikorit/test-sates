@@ -4,105 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Space Background</title>
-    <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box;
-        }
-        
-        body { 
-            color: #fff; 
-            overflow-x: hidden;
-            min-height: 100vh;
-            position: relative;
-            background: #000000;
-            font-family: Arial, sans-serif;
-        }
-        
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-        
-        @keyframes cometFly {
-            0% { 
-                transform: rotate(-45deg) translateX(-100vw);
-                opacity: 0; 
-            }
-            20% { opacity: 1; }
-            80% { opacity: 1; }
-            100% { 
-                transform: rotate(-45deg) translateX(100vw);
-                opacity: 0; 
-            }
-        }
-        
-        @media (max-width: 768px) {        
-            #spaceBg {
-                top: -5% !important;
-                left: -5% !important;
-                width: 110% !important;
-                height: 110% !important;
-            }
-        }
-    </style>
 </head>
 <body>
     <script>
+// Создаем элемент <style> для динамической вставки CSS
+const spaceStyle = document.createElement('style');
+spaceStyle.textContent = `
+  /* Сброс стандартных отступов и модели box-sizing */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Основные стили для body */
+  body {
+    color: #fff;
+    overflow-x: hidden;        /* Скрываем горизонтальную прокрутку */
+    min-height: 100vh;         /* Минимальная высота на весь экран */
+    position: relative;
+    background: #000000;       /* Фон по умолчанию */
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Анимация мерцания звезд */
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; } /* Состояния минимальной видимости */
+    50% { opacity: 1; }        /* Пик яркости звезды */
+  }
+  
+  /* Анимация полета кометы */
+  @keyframes cometFly {
+    0% {
+      transform: rotate(-45deg) translateX(-100vw); /* Начало за пределами экрана */
+      opacity: 0;              /* Полная прозрачность */
+    }
+    20% { opacity: 1; }        /* Появление кометы */
+    80% { opacity: 1; }        /* Видимость в середине пути */
+    100% {
+      transform: rotate(-45deg) translateX(100vw); /* Уход за пределы экрана */
+      opacity: 0;              /* Исчезновение */
+    }
+  }
+  
+  /* Адаптация для мобильных устройств */
+  @media (max-width: 768px) {
+    #spaceBg {
+      top: -5% !important;
+      left: -5% !important;
+      width: 110% !important;
+      height: 110% !important;
+    }
+  }
+`;
+// Добавляем стили в <head> документа
+document.head.appendChild(spaceStyle);
+
+// Основной класс для создания космического фона
 class StarBackground {
   constructor(config = {}) {
-    // Стандартная конфигурация
+    // Конфигурация по умолчанию
     this.defaultConfig = {
-      starsCount: 400,
-      nebulae: [],
-      parallax: {
-        intensity: 30,
-        smoothness: 0.1,
-        maxOffset: 50
+      starsCount: 400,         // Количество звезд
+      nebulae: [],             // Массив туманностей
+      parallax: {              // Настройки параллакс-эффекта
+        intensity: 30,         // Сила смещения
+        smoothness: 0.1,       // Плавность движения
+        maxOffset: 50,         // Максимальное смещение
+        enabled: true,         // Активность эффекта
+        xAxis: true,           // Активность по оси X
+        yAxis: true,           // Активность по оси Y
+        inverted: false,       // Инверсия направления
+        scaleFactor: 1.0       // Множитель масштаба
       },
-      colors: {
+      colors: {                // Цветовые параметры
         primaryGradient: '#1a0a2e',
         secondaryGradient: '#0f0523',
         tertiaryGradient: '#2d0b50',
         bgColor: '#000000'
       },
-      stars: {
-        minSize: 0.5,
-        maxSize: 2.5,
-        minOpacity: 0.2,
-        maxOpacity: 0.7,
-        minDuration: 3,
-        maxDuration: 10
+      stars: {                 // Настройки звезд
+        minSize: 0.5,          // Минимальный размер
+        maxSize: 2.5,          // Максимальный размер
+        minOpacity: 0.2,       // Минимальная прозрачность
+        maxOpacity: 0.7,       // Максимальная прозрачность
+        minDuration: 3,        // Мин. длительность анимации
+        maxDuration: 10        // Макс. длительность анимации
       },
-      animations: {
-        fadeInDuration: 2000,
+      animations: {            // Настройки анимаций
+        fadeInDuration: 2000,  // Длительность появления
         starsChangeDuration: 1000
       },
-      nebulaeSettings: {
-        minCount: 1,
-        maxCount: 5,
-        minSize: 100,
-        maxSize: 400,
-        minBlur: 20,
-        maxBlur: 100,
-        minOpacity: 0.1,
-        maxOpacity: 0.5
+      nebulaeSettings: {       // Настройки туманностей
+        minCount: 1,           // Минимальное количество
+        maxCount: 5,           // Максимальное количество
+        minSize: 100,          // Минимальный размер
+        maxSize: 400,          // Максимальный размер
+        minBlur: 20,           // Минимальное размытие
+        maxBlur: 100,          // Максимальное размытие
+        minOpacity: 0.1,       // Минимальная прозрачность
+        maxOpacity: 0.5        // Максимальная прозрачность
       },
-      // Цветовые схемы для туманностей
+      // Цветовые схемы для элементов
       nebulaColorSchemes: [
-        {
-          name: "Фиолетовая",
-          colors: ['#8c2a5d', '#5d2a8c', '#8c5a7a']
-        },
-        {
-          name: "Синяя",
-          colors: ['#2a5d8c', '#5a8c8c', '#2a8c5d']
-        },
-        {
-          name: "Теплая",
-          colors: ['#8c5d2a', '#5d8c2a', '#8c2a2a']
-        }
+        { name: "Фиолетовая", colors: ['#8c2a5d', '#5d2a8c', '#8c5a7a'] },
+        { name: "Синяя", colors: ['#2a5d8c', '#5a8c8c', '#2a8c5d'] },
+        { name: "Теплая", colors: ['#8c5d2a', '#5d8c2a', '#8c2a2a'] }
+      ],
+      starColorSchemes: [
+        { name: "Белая", colors: ['#ffffff', '#f0f0f0', '#e0e0e0'] },
+        { name: "Золотая", colors: ['#ffeb3b', '#ffc107', '#ff9800'] },
+        { name: "Голубая", colors: ['#03a9f4', '#00bcd4', '#4fc3f7'] }
+      ],
+      cometColorSchemes: [
+        { name: "Белая", colors: ['#ffffff'] },
+        { name: "Синяя", colors: ['#2196f3', '#03a9f4', '#00bcd4'] },
+        { name: "Красная", colors: ['#f44336', '#e91e63', '#ff5722'] }
       ]
     };
 
@@ -114,8 +131,9 @@ class StarBackground {
         secondaryGradient: '#0f0523',
         tertiaryGradient: '#2d0b50',
         bgColor: '#000000',
-        // Связь с несколькими схемами туманностей
-        linkedNebulaSchemes: ["Фиолетовая", "Синяя"]
+        linkedNebulaSchemes: ["Фиолетовая", "Синяя"],
+        linkedStarSchemes: ["Белая"],
+        linkedCometSchemes: ["Синяя"]
       },
       {
         name: "Голубая",
@@ -123,7 +141,9 @@ class StarBackground {
         secondaryGradient: '#051223',
         tertiaryGradient: '#0b2d50',
         bgColor: '#000011',
-        linkedNebulaSchemes: ["Синяя"]
+        linkedNebulaSchemes: ["Синяя"],
+        linkedStarSchemes: ["Голубая"],
+        linkedCometSchemes: ["Белая"]
       },
       {
         name: "Красная",
@@ -131,102 +151,160 @@ class StarBackground {
         secondaryGradient: '#230505',
         tertiaryGradient: '#500b0b',
         bgColor: '#110000',
-        linkedNebulaSchemes: ["Теплая", "Фиолетовая"]
+        linkedNebulaSchemes: ["Теплая", "Фиолетовая"],
+        linkedStarSchemes: ["Золотая"],
+        linkedCometSchemes: ["Красная"]
       },
       {
         name: "Зеленая",
         primaryGradient: '#0a2e1a',
         secondaryGradient: '#052312',
         tertiaryGradient: '#0b502d',
-        bgColor: '#001100'
+        bgColor: '#001100',
+        linkedStarSchemes: ["Белая"],
+        linkedCometSchemes: ["Белая"]
       },
       {
         name: "Золотая",
         primaryGradient: '#2e1a0a',
         secondaryGradient: '#231205',
         tertiaryGradient: '#503d0b',
-        bgColor: '#110d00'
+        bgColor: '#110d00',
+        linkedStarSchemes: ["Золотая"],
+        linkedCometSchemes: ["Красная"]
       }
     ];
 
     // Глубокое слияние конфигураций
-    this.config = { 
+    this.config = {
       ...this.defaultConfig,
       ...config,
+      parallax: {
+        ...this.defaultConfig.parallax,
+        ...(config.parallax || {})
+      },
       nebulaeSettings: {
         ...this.defaultConfig.nebulaeSettings,
         ...(config.nebulaeSettings || {})
       }
     };
 
-    // Пользовательские цветовые схемы
+    // Применение пользовательских схем
     this.colorSchemes = config.colorSchemes || this.defaultColorSchemes;
-    
-    // Пользовательские схемы для туманностей
     this.nebulaColorSchemes = config.nebulaColorSchemes || this.defaultConfig.nebulaColorSchemes;
+    this.starColorSchemes = config.starColorSchemes || this.defaultConfig.starColorSchemes;
+    this.cometColorSchemes = config.cometColorSchemes || this.defaultConfig.cometColorSchemes;
     
-    // Цвета туманностей по умолчанию
-    this.nebulaColors = [
-      '#8c2a5d', '#2a8c5d', '#2a5d8c', '#5d2a8c', 
-      '#8c5d2a', '#5d8c2a', '#5a8c8c', '#8c5a7a'
-    ];
+    // Установка цветов элементов
+    this.nebulaColors = this.defaultConfig.nebulaColorSchemes[0].colors;
+    this.starColors = this.defaultConfig.starColorSchemes[0].colors;
+    this.cometColors = this.defaultConfig.cometColorSchemes[0].colors;
 
-    // Если цвета не заданы - выбираем случайную схему
+    // Автовыбор цветовой схемы если не задана
     if (!config.colors) {
       this.config.colors = this.getRandomColorScheme();
     }
     
-    // Всегда применяем связанные схемы туманностей
-    this.applyLinkedNebulaSchemes();
+    // Применение связанных цветовых схем
+    this.applyLinkedSchemes();
 
-    // Если туманности не заданы - генерируем случайные
+    // Генерация туманностей если не заданы
     if (!config.nebulae) {
       this.generateRandomNebulae();
     }
 
+    // Инициализация системы
     this.init();
   }
 
-  /**
-   * Применяет связанные цветовые схемы для туманностей
-   * на основе выбранной схемы фона
-   */
+  // Применение всех связанных цветовых схем
+  applyLinkedSchemes() {
+    this.applyLinkedNebulaSchemes();
+    this.applyLinkedStarSchemes();
+    this.applyLinkedCometSchemes();
+  }
+
+  // Применение схем для туманностей
   applyLinkedNebulaSchemes() {
-    // Проверяем, есть ли связи в текущей схеме фона
     if (this.config.colors.linkedNebulaSchemes && 
         Array.isArray(this.config.colors.linkedNebulaSchemes)) {
       
-      // Собираем все цвета из всех связанных схем
       const allColors = [];
       
+      // Собираем цвета из связанных схем
       this.config.colors.linkedNebulaSchemes.forEach(schemeName => {
-        // Ищем схему туманностей по имени
         const nebulaScheme = this.nebulaColorSchemes.find(
           scheme => scheme.name === schemeName
         );
         
-        // Если нашли и есть цвета - добавляем их
-        if (nebulaScheme && nebulaScheme.colors && Array.isArray(nebulaScheme.colors)) {
+        if (nebulaScheme?.colors) {
           allColors.push(...nebulaScheme.colors);
         }
       });
       
-      // Если нашли цвета - применяем их
       if (allColors.length > 0) {
         this.nebulaColors = allColors;
       }
     }
   }
 
+  // Применение схем для звезд
+  applyLinkedStarSchemes() {
+    if (this.config.colors.linkedStarSchemes && 
+        Array.isArray(this.config.colors.linkedStarSchemes)) {
+      
+      const allColors = [];
+      
+      this.config.colors.linkedStarSchemes.forEach(schemeName => {
+        const starScheme = this.starColorSchemes.find(
+          scheme => scheme.name === schemeName
+        );
+        
+        if (starScheme?.colors) {
+          allColors.push(...starScheme.colors);
+        }
+      });
+      
+      if (allColors.length > 0) {
+        this.starColors = allColors;
+      }
+    }
+  }
+
+  // Применение схем для комет
+  applyLinkedCometSchemes() {
+    if (this.config.colors.linkedCometSchemes && 
+        Array.isArray(this.config.colors.linkedCometSchemes)) {
+      
+      const allColors = [];
+      
+      this.config.colors.linkedCometSchemes.forEach(schemeName => {
+        const cometScheme = this.cometColorSchemes.find(
+          scheme => scheme.name === schemeName
+        );
+        
+        if (cometScheme?.colors) {
+          allColors.push(...cometScheme.colors);
+        }
+      });
+      
+      if (allColors.length > 0) {
+        this.cometColors = allColors;
+      }
+    }
+  }
+
+  // Генерация параметров для градиента
   getRandomGradientParams() {
     return {
-      radialX: Math.floor(Math.random() * 101),
-      radialY: Math.floor(Math.random() * 101),
-      linearAngle: Math.floor(Math.random() * 361),
-      radialSize: 30 + Math.floor(Math.random() * 41)
+      radialX: Math.floor(Math.random() * 101),  // Случайная позиция X (0-100%)
+      radialY: Math.floor(Math.random() * 101),  // Случайная позиция Y (0-100%)
+      linearAngle: Math.floor(Math.random() * 361), // Угол наклона (0-360°)
+      radialSize: 30 + Math.floor(Math.random() * 41) // Размер градиента (30-70%)
     };
   }
 
+  // Создание фонового градиента
   generateBackgroundGradient() {
     const { radialX, radialY, linearAngle, radialSize } = this.getRandomGradientParams();
     
@@ -244,19 +322,26 @@ class StarBackground {
     `;
   }
 
+  // Выбор случайной цветовой схемы
   getRandomColorScheme() {
     return this.colorSchemes[Math.floor(Math.random() * this.colorSchemes.length)];
   }
 
+  // Генерация случайных туманностей
   generateRandomNebulae() {
-    const { minCount, maxCount, minSize, maxSize, minBlur, maxBlur, minOpacity, maxOpacity } = this.config.nebulaeSettings;
+    const { 
+      minCount, maxCount, 
+      minSize, maxSize, 
+      minBlur, maxBlur, 
+      minOpacity, maxOpacity 
+    } = this.config.nebulaeSettings;
     
-    // Рассчитываем случайное количество туманностей
+    // Случайное количество туманностей
     const nebulaCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
     this.config.nebulae = [];
     
     for (let i = 0; i < nebulaCount; i++) {
-      // Выбираем случайный цвет из текущей палитры туманностей
+      // Случайный цвет из активной палитры
       const color = this.nebulaColors[Math.floor(Math.random() * this.nebulaColors.length)];
       
       this.config.nebulae.push({
@@ -265,63 +350,73 @@ class StarBackground {
         blur: Math.floor(Math.random() * (maxBlur - minBlur + 1)) + minBlur,
         opacity: minOpacity + Math.random() * (maxOpacity - minOpacity),
         position: {
-          top: `${10 + Math.floor(Math.random() * 80)}%`,
-          left: `${10 + Math.floor(Math.random() * 80)}%`
+          top: `${10 + Math.floor(Math.random() * 80)}%`,  // 10-90%
+          left: `${10 + Math.floor(Math.random() * 80)}%`  // 10-90%
         }
       });
     }
   }
 
+  // Основная инициализация
   init() {
-    this.createContainer();
-    this.createNebulae(true);
-    this.createStars(true);
-    this.initParallax();
-    this.addResizeListener();
+    this.createContainer();     // Создание контейнера
+    this.createNebulae(true);   // Генерация туманностей с анимацией
+    this.createStars(true);     // Генерация звезд с анимацией
+    this.initParallax();        // Инициализация параллакс-эффекта
+    this.addResizeListener();   // Добавление обработчика ресайза
   }
 
+  // Создание основного контейнера
   createContainer() {
     this.spaceBg = document.createElement('div');
     this.spaceBg.id = 'spaceBg';
+    
+    // Применение стилей к контейнеру
     Object.assign(this.spaceBg.style, {
       position: 'fixed',
-      top: '-10%',
+      top: '-10%',          // Расширение за границы экрана
       left: '-10%',
-      width: '120%',
+      width: '120%',        // Для плавного параллакса
       height: '120%',
       background: this.generateBackgroundGradient(),
-      zIndex: '-1',
-      overflow: 'hidden',
-      willChange: 'transform',
-      opacity: '0',
+      zIndex: '-1',         // Под всем контентом
+      overflow: 'hidden',    // Скрытие выходящих за границы элементов
+      willChange: 'transform', // Оптимизация анимаций
+      opacity: '0',          // Начальное состояние - прозрачный
       transition: `opacity ${this.config.animations.fadeInDuration}ms ease-out`
     });
 
+    // Вставка контейнера в начало body
     document.body.prepend(this.spaceBg);
 
+    // Плавное появление через 100мс
     setTimeout(() => {
       this.spaceBg.style.opacity = '1';
     }, 100);
   }
 
+  // Создание туманностей
   createNebulae(fadeIn = false) {
     this.config.nebulae.forEach(nebula => {
       const element = document.createElement('div');
       
+      // Применение стилей к туманности
       Object.assign(element.style, {
         position: 'absolute',
-        borderRadius: '50%',
-        filter: `blur(${nebula.blur}px)`,
-        opacity: fadeIn ? '0' : nebula.opacity,
+        borderRadius: '50%',   // Круглая форма
+        filter: `blur(${nebula.blur}px)`, // Эффект размытия
+        opacity: fadeIn ? '0' : nebula.opacity, // Начальная прозрачность
         width: `${nebula.size}px`,
         height: `${nebula.size}px`,
         background: `radial-gradient(circle, ${nebula.color}, transparent 70%)`,
-        ...nebula.position,
+        top: nebula.position.top,   // Позиционирование
+        left: nebula.position.left,
         transition: `opacity ${this.config.animations.fadeInDuration}ms ease-out`
       });
 
       this.spaceBg.appendChild(element);
 
+      // Плавное появление
       if (fadeIn) {
         setTimeout(() => {
           element.style.opacity = nebula.opacity;
@@ -330,31 +425,40 @@ class StarBackground {
     });
   }
 
+  // Создание звезд
   createStars(fadeIn = false) {
-    const { minSize, maxSize, minOpacity, maxOpacity, minDuration, maxDuration } = this.config.stars;
+    const { 
+      minSize, maxSize, 
+      minOpacity, maxOpacity, 
+      minDuration, maxDuration 
+    } = this.config.stars;
 
     for (let i = 0; i < this.config.starsCount; i++) {
       const star = document.createElement('div');
       
+      // Случайные параметры звезды
       const size = Math.random() * (maxSize - minSize) + minSize;
       const duration = minDuration + Math.random() * (maxDuration - minDuration);
       const opacity = minOpacity + Math.random() * (maxOpacity - minOpacity);
+      const color = this.starColors[Math.floor(Math.random() * this.starColors.length)];
 
+      // Применение стилей к звезде
       Object.assign(star.style, {
         position: 'absolute',
-        backgroundColor: 'white',
-        borderRadius: '50%',
-        animation: `twinkle ${duration}s infinite ease-in-out`,
+        backgroundColor: color,     // Цвет из активной палитры
+        borderRadius: '50%',         // Круглая форма
+        animation: `twinkle ${duration}s infinite ease-in-out`, // Анимация мерцания
         width: `${size}px`,
         height: `${size}px`,
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        opacity: fadeIn ? '0' : opacity,
+        left: `${Math.random() * 100}%`, // Случайная позиция по X
+        top: `${Math.random() * 100}%`,  // Случайная позиция по Y
+        opacity: fadeIn ? '0' : opacity, // Начальная прозрачность
         transition: `opacity ${this.config.animations.fadeInDuration}ms ease-out`
       });
 
       this.spaceBg.appendChild(star);
 
+      // Плавное появление со случайной задержкой
       if (fadeIn) {
         setTimeout(() => {
           star.style.opacity = opacity;
@@ -363,43 +467,66 @@ class StarBackground {
     }
   }
 
+  // Инициализация параллакс-эффекта
   initParallax() {
+    // Выход если эффект отключен
+    if (!this.config.parallax.enabled) return;
+    
+    // Инициализация переменных позиции
     this.lastX = 0;
     this.lastY = 0;
     this.targetX = 0;
     this.targetY = 0;
 
+    // Обработчик движения мыши
     document.addEventListener('mousemove', (e) => {
+      // Нормализация координат (от -0.5 до 0.5)
       const normalizedX = e.clientX / window.innerWidth - 0.5;
       const normalizedY = e.clientY / window.innerHeight - 0.5;
       
-      this.targetX = normalizedX * this.config.parallax.intensity;
-      this.targetY = normalizedY * this.config.parallax.intensity;
+      // Определение направления
+      const direction = this.config.parallax.inverted ? -1 : 1;
+      
+      // Расчет целевого смещения
+      if (this.config.parallax.xAxis) {
+        this.targetX = normalizedX * this.config.parallax.intensity * 
+                       direction * this.config.parallax.scaleFactor;
+      }
+      
+      if (this.config.parallax.yAxis) {
+        this.targetY = normalizedY * this.config.parallax.intensity * 
+                       direction * this.config.parallax.scaleFactor;
+      }
     });
 
+    // Запуск анимации
     this.animateParallax();
   }
 
+  // Анимация параллакс-эффекта
   animateParallax() {
+    // Интерполяция для плавного движения
     this.lastX += (this.targetX - this.lastX) * this.config.parallax.smoothness;
     this.lastY += (this.targetY - this.lastY) * this.config.parallax.smoothness;
 
-    const limitedX = Math.max(
-      -this.config.parallax.maxOffset, 
-      Math.min(this.config.parallax.maxOffset, this.lastX)
-    );
-    const limitedY = Math.max(
-      -this.config.parallax.maxOffset, 
-      Math.min(this.config.parallax.maxOffset, this.lastY)
-    );
+    // Ограничение смещения
+    const maxOffset = this.config.parallax.maxOffset;
+    const limitedX = Math.max(-maxOffset, Math.min(maxOffset, this.lastX));
+    const limitedY = Math.max(-maxOffset, Math.min(maxOffset, this.lastY));
 
+    // Применение трансформации
     this.spaceBg.style.transform = `translate(${limitedX}px, ${limitedY}px)`;
     
-    requestAnimationFrame(() => this.animateParallax());
+    // Рекурсивный вызов анимации
+    if (this.config.parallax.enabled) {
+      requestAnimationFrame(() => this.animateParallax());
+    }
   }
 
+  // Обработчик изменения размера окна
   addResizeListener() {
     window.addEventListener('resize', () => {
+      // Сброс позиции при ресайзе
       this.spaceBg.style.transform = 'translate(0px, 0px)';
       this.lastX = 0;
       this.lastY = 0;
@@ -408,105 +535,174 @@ class StarBackground {
     });
   }
 
+  // Добавление кометы
   addComet() {
     const comet = document.createElement('div');
     
+    // Случайный цвет из активной палитры
+    const baseColor = this.cometColors[Math.floor(Math.random() * this.cometColors.length)];
+    
+    // Конвертация HEX в RGB
+    const hexToRgb = (hex) => {
+      const bigint = parseInt(hex.replace('#', ''), 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+      };
+    };
+    
+    const rgb = hexToRgb(baseColor);
+    
+    // Применение стилей к комете
     Object.assign(comet.style, {
       position: 'absolute',
-      width: '120px',
-      height: '4px',
-      background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
-      transformOrigin: 'left center',
-      transform: 'rotate(-45deg)',
-      top: `${Math.random() * 100}%`,
+      width: '120px',       // Длина хвоста
+      height: '4px',        // Толщина хвоста
+      background: `linear-gradient(90deg, 
+        rgba(${rgb.r},${rgb.g},${rgb.b},0) 0%, 
+        rgba(${rgb.r},${rgb.g},${rgb.b},0.8) 50%, 
+        rgba(${rgb.r},${rgb.g},${rgb.b},0) 100%)`,
+      transformOrigin: 'left center', // Точка вращения
+      transform: 'rotate(-45deg)',   // Угол полета
+      top: `${Math.random() * 100}%`, // Случайная позиция
       left: `${Math.random() * 100}%`,
-      animation: `cometFly ${8 + Math.random() * 15}s infinite linear`,
-      opacity: '0',
+      animation: `cometFly ${8 + Math.random() * 15}s infinite linear`, // Случайная скорость
+      opacity: '0',          // Начальная прозрачность
       transition: 'opacity 1s ease-out'
     });
 
     this.spaceBg.appendChild(comet);
 
+    // Плавное появление
     setTimeout(() => {
       comet.style.opacity = '1';
     }, 50);
   }
 }
 
-// Инициализация после загрузки DOM
+// Инициализация после полной загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
-  // Расширенные настройки с множественными связями
+  // Расширенные настройки с примерами кастомизации
   const spaceBg = new StarBackground({
-    starsCount: 800,
+    starsCount: 800,       // Увеличенное количество звезд
     parallax: {
-      intensity: 40,
-      smoothness: 0.08,
-      maxOffset: 60
+      intensity: 50,       // Более сильный эффект
+      smoothness: 0.05,    // Более плавное движение
+      maxOffset: 80,       // Большее максимальное смещение
+      scaleFactor: 1.2     // Усиление эффекта
     },
     stars: {
-      minSize: 0.3,
-      maxSize: 3,
-      minOpacity: 0.1,
-      maxOpacity: 0.9,
-      minDuration: 2,
-      maxDuration: 15
+      minSize: 0.3,        // Более мелкие звезды
+      maxSize: 3,          // Крупные звезды
+      minOpacity: 0.1,     // Минимальная видимость
+      maxOpacity: 0.9      // Максимальная яркость
     },
     animations: {
-      fadeInDuration: 1500,
-      starsChangeDuration: 1200
+      fadeInDuration: 1500 // Более быстрое появление
     },
     nebulaeSettings: {
-      minCount: 3,
-      maxCount: 8,
-      minSize: 80,
-      maxSize: 500,
-      minBlur: 10,
-      maxBlur: 120,
-      minOpacity: 0.05,
-      maxOpacity: 0.6
+      minCount: 3,         // Минимум туманностей
+      maxCount: 8,         // Максимум туманностей
+      minSize: 80,         // Минимальный размер
+      maxSize: 500,        // Максимальный размер
+      minBlur: 10,         // Минимальное размытие
+      maxBlur: 120,        // Максимальное размытие
+      minOpacity: 0.05,    // Минимальная прозрачность
+      maxOpacity: 0.6      // Максимальная прозрачность
     },
-    // Пользовательские цветовые схемы фона
-    colorSchemes: [
-      {
-        name: "Галактическая",
-        primaryGradient: '#0a0a2e',
-        secondaryGradient: '#050523',
-        tertiaryGradient: '#1b0b50',
-        bgColor: '#000011',
-        // Связь с несколькими схемами туманностей
-        linkedNebulaSchemes: ["Космическая", "Синяя"]
-      },
-      {
-        name: "Пурпурная",
-        primaryGradient: '#2e0a1a',
-        secondaryGradient: '#230515',
-        tertiaryGradient: '#500b2d',
-        bgColor: '#0a000a',
-        linkedNebulaSchemes: ["Марсианская", "Фиолетовая"]
-      }
-    ],
-    // Пользовательские схемы для туманностей
-    nebulaColorSchemes: [
-      {
-        name: "Космическая",
-        colors: ['#6b8cff', '#48dbfb', '#1dd1a1']
-      },
-      {
-        name: "Синяя",
-        colors: ['#2a5d8c', '#5a8c8c', '#2a8c5d']
-      },
-      {
-        name: "Марсианская",
-        colors: ['#ff6b6b', '#ff9f43', '#f368e0']
-      },
-      {
-        name: "Фиолетовая",
-        colors: ['#8c2a5d', '#5d2a8c', '#8c5a7a']
-      }
-    ]
+    // Пользовательские цветовые схемы
+colorSchemes: [
+  {
+    name: "Галактическая",
+    primaryGradient: '#0a0a2e',
+    secondaryGradient: '#050523',
+    tertiaryGradient: '#1b0b50',
+    bgColor: '#000011',
+    linkedNebulaSchemes: ["Космическая", "Синяя"],
+    linkedStarSchemes: ["Голубая"],
+    linkedCometSchemes: ["Синяя"]
+  },
+  // Фиолетовая пользовательская схема
+  {
+    name: "Фиолетовая Глубокая",
+    primaryGradient: '#1a0a2e',
+    secondaryGradient: '#0f0523',
+    tertiaryGradient: '#3d0b50',
+    bgColor: '#0a001a',
+    linkedNebulaSchemes: ["Фиолетовая Глубокая"],
+    linkedStarSchemes: ["Фиолетовые Искры"],
+    linkedCometSchemes: ["Фиолетовые Кометы"]
+  },
+  // Зелёная пользовательская схема
+  {
+    name: "Зелёная Глубокая",
+    primaryGradient: '#0a2e1a',
+    secondaryGradient: '#052312',
+    tertiaryGradient: '#0b502d',
+    bgColor: '#001a0a',
+    linkedNebulaSchemes: ["Зелёные Туманности"],
+    linkedStarSchemes: ["Зелёные Искры"],
+    linkedCometSchemes: ["Зелёные Кометы"]
+  }
+],
+
+// Пользовательские схемы для туманностей
+nebulaColorSchemes: [
+  {
+    name: "Космическая",
+    colors: ['#6b8cff', '#48dbfb', '#1dd1a1']
+  },
+  // Фиолетовые туманности
+  {
+    name: "Фиолетовая Глубокая",
+    colors: ['#8a2be2', '#9370db', '#ba55d3', '#dda0dd']
+  },
+  // Зелёные туманности
+  {
+    name: "Зелёные Туманности",
+    colors: ['#32cd32', '#3cb371', '#2e8b57', '#66cdaa']
+  }
+],
+
+// Пользовательские схемы для звезд
+starColorSchemes: [
+  {
+    name: "Фиолетовая",
+    colors: ['#e1bee7', '#ce93d8', '#ba68c8']
+  },
+  // Фиолетовые звезды
+  {
+    name: "Фиолетовые Искры",
+    colors: ['#ee82ee', '#da70d6', '#d8bfd8', '#e6e6fa']
+  },
+  // Зелёные звезды
+  {
+    name: "Зелёные Искры",
+    colors: ['#98fb98', '#90ee90', '#adff2f', '#7fff00']
+  }
+],
+
+// Пользовательские схемы для комет
+cometColorSchemes: [
+  {
+    name: "Бирюзовая",
+    colors: ['#26c6da', '#00bcd4', '#00acc1']
+  },
+  // Фиолетовые кометы
+  {
+    name: "Фиолетовые Кометы",
+    colors: ['#9400d3', '#8a2be2', '#9932cc']
+  },
+  // Зелёные кометы
+  {
+    name: "Зелёные Кометы",
+    colors: ['#00fa9a', '#00ff7f', '#3cb371']
+  }
+]
   });
 
-  // Генерация комет
+  // Создание комет с разными задержками
   [0, 2000, 4000, 6000, 8000].forEach(delay => {
     setTimeout(() => spaceBg.addComet(), delay);
   });
