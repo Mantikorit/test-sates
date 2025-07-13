@@ -50,10 +50,10 @@ spaceStyle.textContent = `
   /* Адаптация для мобильных устройств */
   @media (max-width: 768px) {
     #spaceBg {
-      top: -5% !important;
-      left: -5% !important;
-      width: 110% !important;
-      height: 110% !important;
+      top: -15% !important;
+      left: -15% !important;
+      width: 130% !important;
+      height: 130% !important;
     }
   }
 `;
@@ -213,8 +213,20 @@ class StarBackground {
       this.generateRandomNebulae();
     }
 
+    // Автокоррекция для мобильных устройств
+    this.autoAdjustForMobile();
+
     // Инициализация системы
     this.init();
+  }
+
+  // Автоматическая настройка для мобильных
+  autoAdjustForMobile() {
+    if (window.innerWidth <= 768) {
+      this.config.parallax.maxOffset = Math.min(this.config.parallax.maxOffset, 30);
+      this.config.parallax.intensity = Math.min(this.config.parallax.intensity, 20);
+      this.config.parallax.scaleFactor = Math.min(this.config.parallax.scaleFactor, 0.8);
+    }
   }
 
   // Применение всех связанных цветовых схем
@@ -479,10 +491,10 @@ class StarBackground {
     this.targetY = 0;
 
     // Обработчик движения мыши
-    document.addEventListener('mousemove', (e) => {
+    const handleMove = (x, y) => {
       // Нормализация координат (от -0.5 до 0.5)
-      const normalizedX = e.clientX / window.innerWidth - 0.5;
-      const normalizedY = e.clientY / window.innerHeight - 0.5;
+      const normalizedX = x / window.innerWidth - 0.5;
+      const normalizedY = y / window.innerHeight - 0.5;
       
       // Определение направления
       const direction = this.config.parallax.inverted ? -1 : 1;
@@ -496,6 +508,14 @@ class StarBackground {
       if (this.config.parallax.yAxis) {
         this.targetY = normalizedY * this.config.parallax.intensity * 
                        direction * this.config.parallax.scaleFactor;
+      }
+    };
+
+    // Обработчики событий
+    document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
       }
     });
 
@@ -526,6 +546,9 @@ class StarBackground {
   // Обработчик изменения размера окна
   addResizeListener() {
     window.addEventListener('resize', () => {
+      // Автокоррекция для мобильных устройств
+      this.autoAdjustForMobile();
+      
       // Сброс позиции при ресайзе
       this.spaceBg.style.transform = 'translate(0px, 0px)';
       this.lastX = 0;
