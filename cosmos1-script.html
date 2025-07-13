@@ -105,6 +105,16 @@ class StarBackground {
         minOpacity: 0.1,       // Минимальная прозрачность
         maxOpacity: 0.5        // Максимальная прозрачность
       },
+      // НАСТРОЙКИ КОМЕТ (ДОБАВЛЕНО)
+      comets: {
+        count: 3,              // Количество комет
+        minDelay: 1000,        // Минимальная задержка появления (мс)
+        maxDelay: 5000,        // Максимальная задержка
+        minLength: 80,         // Минимальная длина хвоста
+        maxLength: 200,        // Максимальная длина
+        minThickness: 1,       // Минимальная толщина
+        maxThickness: 4        // Максимальная толщина
+      },
       // Цветовые схемы для элементов
       nebulaColorSchemes: [
         { name: "Фиолетовая", colors: ['#8c2a5d', '#5d2a8c', '#8c5a7a'] },
@@ -186,6 +196,11 @@ class StarBackground {
       nebulaeSettings: {
         ...this.defaultConfig.nebulaeSettings,
         ...(config.nebulaeSettings || {})
+      },
+      // ОБЪЕДИНЕНИЕ НАСТРОЕК КОМЕТ (ДОБАВЛЕНО)
+      comets: {
+        ...this.defaultConfig.comets,
+        ...(config.comets || {})
       }
     };
 
@@ -226,6 +241,9 @@ class StarBackground {
       this.config.parallax.maxOffset = Math.min(this.config.parallax.maxOffset, 30);
       this.config.parallax.intensity = Math.min(this.config.parallax.intensity, 20);
       this.config.parallax.scaleFactor = Math.min(this.config.parallax.scaleFactor, 0.8);
+      // Коррекция для комет на мобильных
+      this.config.comets.minLength = Math.min(this.config.comets.minLength, 60);
+      this.config.comets.maxLength = Math.min(this.config.comets.maxLength, 150);
     }
   }
 
@@ -376,6 +394,18 @@ class StarBackground {
     this.createStars(true);     // Генерация звезд с анимацией
     this.initParallax();        // Инициализация параллакс-эффекта
     this.addResizeListener();   // Добавление обработчика ресайза
+    this.createComets();        // СОЗДАНИЕ КОМЕТ (ДОБАВЛЕНО)
+  }
+
+  // НОВЫЙ МЕТОД: СОЗДАНИЕ КОМЕТ
+  createComets() {
+    const { count, minDelay, maxDelay } = this.config.comets;
+    
+    // Создаем кометы со случайными задержками
+    for (let i = 0; i < count; i++) {
+      const delay = minDelay + Math.random() * (maxDelay - minDelay);
+      setTimeout(() => this.addComet(), delay);
+    }
   }
 
   // Создание основного контейнера
@@ -558,7 +588,7 @@ class StarBackground {
     });
   }
 
-  // Добавление кометы
+  // Добавление кометы (ОБНОВЛЕНО)
   addComet() {
     const comet = document.createElement('div');
     
@@ -577,11 +607,18 @@ class StarBackground {
     
     const rgb = hexToRgb(baseColor);
     
+    // Параметры из конфига
+    const { minLength, maxLength, minThickness, maxThickness } = this.config.comets;
+    
+    // Случайные размеры
+    const length = minLength + Math.random() * (maxLength - minLength);
+    const thickness = minThickness + Math.random() * (maxThickness - minThickness);
+    
     // Применение стилей к комете
     Object.assign(comet.style, {
       position: 'absolute',
-      width: '120px',       // Длина хвоста
-      height: '4px',        // Толщина хвоста
+      width: `${length}px`,     // Используем настройки
+      height: `${thickness}px`, // Используем настройки
       background: `linear-gradient(90deg, 
         rgba(${rgb.r},${rgb.g},${rgb.b},0) 0%, 
         rgba(${rgb.r},${rgb.g},${rgb.b},0.8) 50%, 
@@ -634,100 +671,105 @@ document.addEventListener('DOMContentLoaded', () => {
       minOpacity: 0.05,    // Минимальная прозрачность
       maxOpacity: 0.6      // Максимальная прозрачность
     },
+    // КАСТОМИЗАЦИЯ КОМЕТ (ДОБАВЛЕНО)
+    comets: {
+      count: 5,            // Количество комет
+      minDelay: 500,       // Минимальная задержка (0.5 сек)
+      maxDelay: 8000,      // Максимальная задержка (8 сек)
+      minLength: 100,      // Минимальная длина
+      maxLength: 300,      // Максимальная длина
+      minThickness: 2,     // Минимальная толщина
+      maxThickness: 6      // Максимальная толщина
+    },
     // Пользовательские цветовые схемы
-colorSchemes: [
-  {
-    name: "Галактическая",
-    primaryGradient: '#0a0a2e',
-    secondaryGradient: '#050523',
-    tertiaryGradient: '#1b0b50',
-    bgColor: '#000011',
-    linkedNebulaSchemes: ["Космическая", "Синяя"],
-    linkedStarSchemes: ["Голубая"],
-    linkedCometSchemes: ["Синяя"]
-  },
-  // Фиолетовая пользовательская схема
-  {
-    name: "Фиолетовая Глубокая",
-    primaryGradient: '#1a0a2e',
-    secondaryGradient: '#0f0523',
-    tertiaryGradient: '#3d0b50',
-    bgColor: '#0a001a',
-    linkedNebulaSchemes: ["Фиолетовая Глубокая"],
-    linkedStarSchemes: ["Фиолетовые Искры"],
-    linkedCometSchemes: ["Фиолетовые Кометы"]
-  },
-  // Зелёная пользовательская схема
-  {
-    name: "Зелёная Глубокая",
-    primaryGradient: '#0a2e1a',
-    secondaryGradient: '#052312',
-    tertiaryGradient: '#0b502d',
-    bgColor: '#001a0a',
-    linkedNebulaSchemes: ["Зелёные Туманности"],
-    linkedStarSchemes: ["Зелёные Искры"],
-    linkedCometSchemes: ["Зелёные Кометы"]
-  }
-],
+    colorSchemes: [
+      {
+        name: "Галактическая",
+        primaryGradient: '#0a0a2e',
+        secondaryGradient: '#050523',
+        tertiaryGradient: '#1b0b50',
+        bgColor: '#000011',
+        linkedNebulaSchemes: ["Космическая", "Синяя"],
+        linkedStarSchemes: ["Голубая"],
+        linkedCometSchemes: ["Синяя"]
+      },
+      // Фиолетовая пользовательская схема
+      {
+        name: "Фиолетовая Глубокая",
+        primaryGradient: '#1a0a2e',
+        secondaryGradient: '#0f0523',
+        tertiaryGradient: '#3d0b50',
+        bgColor: '#0a001a',
+        linkedNebulaSchemes: ["Фиолетовая Глубокая"],
+        linkedStarSchemes: ["Фиолетовые Искры"],
+        linkedCometSchemes: ["Фиолетовые Кометы"]
+      },
+      // Зелёная пользовательская схема
+      {
+        name: "Зелёная Глубокая",
+        primaryGradient: '#0a2e1a',
+        secondaryGradient: '#052312',
+        tertiaryGradient: '#0b502d',
+        bgColor: '#001a0a',
+        linkedNebulaSchemes: ["Зелёные Туманности"],
+        linkedStarSchemes: ["Зелёные Искры"],
+        linkedCometSchemes: ["Зелёные Кометы"]
+      }
+    ],
 
-// Пользовательские схемы для туманностей
-nebulaColorSchemes: [
-  {
-    name: "Космическая",
-    colors: ['#6b8cff', '#48dbfb', '#1dd1a1']
-  },
-  // Фиолетовые туманности
-  {
-    name: "Фиолетовая Глубокая",
-    colors: ['#8a2be2', '#9370db', '#ba55d3', '#dda0dd']
-  },
-  // Зелёные туманности
-  {
-    name: "Зелёные Туманности",
-    colors: ['#32cd32', '#3cb371', '#2e8b57', '#66cdaa']
-  }
-],
+    // Пользовательские схемы для туманностей
+    nebulaColorSchemes: [
+      {
+        name: "Космическая",
+        colors: ['#6b8cff', '#48dbfb', '#1dd1a1']
+      },
+      // Фиолетовые туманности
+      {
+        name: "Фиолетовая Глубокая",
+        colors: ['#8a2be2', '#9370db', '#ba55d3', '#dda0dd']
+      },
+      // Зелёные туманности
+      {
+        name: "Зелёные Туманности",
+        colors: ['#32cd32', '#3cb371', '#2e8b57', '#66cdaa']
+      }
+    ],
 
-// Пользовательские схемы для звезд
-starColorSchemes: [
-  {
-    name: "Фиолетовая",
-    colors: ['#e1bee7', '#ce93d8', '#ba68c8']
-  },
-  // Фиолетовые звезды
-  {
-    name: "Фиолетовые Искры",
-    colors: ['#ee82ee', '#da70d6', '#d8bfd8', '#e6e6fa']
-  },
-  // Зелёные звезды
-  {
-    name: "Зелёные Искры",
-    colors: ['#98fb98', '#90ee90', '#adff2f', '#7fff00']
-  }
-],
+    // Пользовательские схемы для звезд
+    starColorSchemes: [
+      {
+        name: "Фиолетовая",
+        colors: ['#e1bee7', '#ce93d8', '#ba68c8']
+      },
+      // Фиолетовые звезды
+      {
+        name: "Фиолетовые Искры",
+        colors: ['#ee82ee', '#da70d6', '#d8bfd8', '#e6e6fa']
+      },
+      // Зелёные звезды
+      {
+        name: "Зелёные Искры",
+        colors: ['#98fb98', '#90ee90', '#adff2f', '#7fff00']
+      }
+    ],
 
-// Пользовательские схемы для комет
-cometColorSchemes: [
-  {
-    name: "Бирюзовая",
-    colors: ['#26c6da', '#00bcd4', '#00acc1']
-  },
-  // Фиолетовые кометы
-  {
-    name: "Фиолетовые Кометы",
-    colors: ['#9400d3', '#8a2be2', '#9932cc']
-  },
-  // Зелёные кометы
-  {
-    name: "Зелёные Кометы",
-    colors: ['#00fa9a', '#00ff7f', '#3cb371']
-  }
-]
-  });
-
-  // Создание комет с разными задержками
-  [0, 2000, 4000, 6000, 8000].forEach(delay => {
-    setTimeout(() => spaceBg.addComet(), delay);
+    // Пользовательские схемы для комет
+    cometColorSchemes: [
+      {
+        name: "Бирюзовая",
+        colors: ['#26c6da', '#00bcd4', '#00acc1']
+      },
+      // Фиолетовые кометы
+      {
+        name: "Фиолетовые Кометы",
+        colors: ['#9400d3', '#8a2be2', '#9932cc']
+      },
+      // Зелёные кометы
+      {
+        name: "Зелёные Кометы",
+        colors: ['#00fa9a', '#00ff7f', '#3cb371']
+      }
+    ]
   });
 });
     </script>
